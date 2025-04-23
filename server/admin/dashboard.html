@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Admin Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 shadow-lg">
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-user-shield text-2xl text-blue-500"></i>
+                    <div>
+                        <h1 class="font-bold text-white">Admin Panel</h1>
+                        <p class="text-xs text-gray-400" id="adminInfo">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="/admin/dashboard.html" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/users.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Users</span>
+                </a>
+                <a href="/admin/transactions.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="/admin/settings.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                <button id="logoutBtn" class="w-full flex items-center justify-center space-x-2 p-2 text-red-400 hover:bg-red-900/50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-gray-800 shadow-sm">
+                <div class="p-4">
+                    <h2 class="text-xl font-semibold text-white">Dashboard Admin</h2>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Total Users -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Total Users</p>
+                                <h3 id="totalUsers" class="text-2xl font-bold text-white">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-blue-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-users text-blue-500"></i>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm">
+                            <span id="activeUsers" class="text-green-500">0 aktif</span>
+                            <span class="text-gray-400"> | </span>
+                            <span id="expiringUsers" class="text-yellow-500">0 akan expired</span>
+                        </p>
+                    </div>
+
+                    <!-- Monthly Transactions -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Transaksi Bulan Ini</p>
+                                <h3 id="monthlyTransactions" class="text-2xl font-bold text-white">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-purple-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exchange-alt text-purple-500"></i>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-400">
+                            Total: <span id="totalTransactions">0</span> transaksi
+                        </p>
+                    </div>
+
+                    <!-- Monthly Income -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Pemasukan Bulan Ini</p>
+                                <h3 id="monthlyIncome" class="text-2xl font-bold text-green-500">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-green-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-up text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Expense -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Pengeluaran Bulan Ini</p>
+                                <h3 id="monthlyExpense" class="text-2xl font-bold text-red-500">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-red-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-red-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- User Growth Chart -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Pertumbuhan User</h3>
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+
+                    <!-- Transaction Chart -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Transaksi per Hari</h3>
+                        <canvas id="transactionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-white">Aktivitas Terbaru</h3>
+                        <a href="/admin/users.html" class="text-blue-500 hover:text-blue-400 text-sm">
+                            Lihat Semua
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                    <div class="space-y-4" id="recentActivities">
+                        <div class="text-center text-gray-400 py-4">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Expiring Users -->
+                <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-white">User yang Akan Expired</h3>
+                        <a href="/admin/users.html?filter=expiring" class="text-blue-500 hover:text-blue-400 text-sm">
+                            Lihat Semua
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-400 border-b border-gray-700">
+                                    <th class="pb-3">Username</th>
+                                    <th class="pb-3">Nomor Aktif</th>
+                                    <th class="pb-3">Tanggal Expired</th>
+                                    <th class="pb-3">Sisa Waktu</th>
+                                    <th class="pb-3 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expiringUsersList">
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-gray-400">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/admin/login.html';
+        }
+
+        // Format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR'
+            }).format(amount);
+        };
+
+        // Format date
+        const formatDate = (date) => {
+            return new Intl.DateTimeFormat('id-ID', {
+                dateStyle: 'medium'
+            }).format(new Date(date));
+        };
+
+        // Calculate days until expiry
+        const getDaysUntilExpiry = (expiryDate) => {
+            const days = Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+            return days;
+        };
+
+        // Format days remaining
+        const formatDaysRemaining = (days) => {
+            if (days < 0) return 'Expired';
+            if (days === 0) return 'Hari ini';
+            return `${days} hari lagi`;
+        };
+
+        // Load dashboard data
+        const loadDashboard = async () => {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                const stats = data.data;
+
+                // Update summary cards
+                document.getElementById('totalUsers').textContent = stats.users.total;
+                document.getElementById('activeUsers').textContent = `${stats.users.active} aktif`;
+                document.getElementById('expiringUsers').textContent = `${stats.users.expiring} akan expired`;
+                
+                document.getElementById('monthlyTransactions').textContent = stats.transactions.monthly;
+                document.getElementById('totalTransactions').textContent = stats.transactions.total;
+                
+                document.getElementById('monthlyIncome').textContent = formatCurrency(stats.transactions.monthlyIncome);
+                document.getElementById('monthlyExpense').textContent = formatCurrency(stats.transactions.monthlyExpense);
+
+                // Create user growth chart
+                const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+                new Chart(userGrowthCtx, {
+                    type: 'line',
+                    data: {
+                        labels: stats.userGrowth.map(d => d.date),
+                        datasets: [{
+                            label: 'Total Users',
+                            data: stats.userGrowth.map(d => d.total),
+                            borderColor: '#3B82F6',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#9CA3AF'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#9CA3AF'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Create transaction chart
+                const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+                new Chart(transactionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: stats.dailyTransactions.map(d => d.date),
+                        datasets: [
+                            {
+                                label: 'Pemasukan',
+                                data: stats.dailyTransactions.map(d => d.income),
+                                backgroundColor: '#10B981'
+                            },
+                            {
+                                label: 'Pengeluaran',
+                                data: stats.dailyTransactions.map(d => d.expense),
+                                backgroundColor: '#EF4444'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#9CA3AF'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#9CA3AF',
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#9CA3AF'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Update recent activities
+                const activitiesHTML = stats.recentActivities.map(activity => `
+                    <div class="flex items-center space-x-4">
+                        <div class="w-8 h-8 rounded-full bg-${activity.type === 'user' ? 'blue' : 'purple'}-900/50 flex items-center justify-center">
+                            <i class="fas fa-${activity.type === 'user' ? 'user' : 'exchange-alt'} text-${activity.type === 'user' ? 'blue' : 'purple'}-500"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-white">${activity.message}</p>
+                            <p class="text-sm text-gray-400">${formatDate(activity.timestamp)}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('recentActivities').innerHTML = activitiesHTML || `
+                    <div class="text-center text-gray-400 py-4">Tidak ada aktivitas terbaru</div>
+                `;
+
+                // Update expiring users list
+                const expiringUsersHTML = stats.expiringUsers.map(user => {
+                    const daysRemaining = getDaysUntilExpiry(user.activationExpiry);
+                    return `
+                        <tr class="border-b border-gray-700">
+                            <td class="py-3 text-white">${user.username}</td>
+                            <td class="py-3 text-gray-300">${user.phoneNumbers.length} nomor</td>
+                            <td class="py-3 text-gray-300">${formatDate(user.activationExpiry)}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded-full text-xs ${
+                                    daysRemaining <= 3 ? 'bg-red-900/50 text-red-400' :
+                                    daysRemaining <= 7 ? 'bg-yellow-900/50 text-yellow-400' :
+                                    'bg-green-900/50 text-green-400'
+                                }">
+                                    ${formatDaysRemaining(daysRemaining)}
+                                </span>
+                            </td>
+                            <td class="py-3 text-right">
+                                <button 
+                                    onclick="extendUser('${user._id}')"
+                                    class="text-blue-500 hover:text-blue-400"
+                                >
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Perpanjang
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('expiringUsersList').innerHTML = expiringUsersHTML || `
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-gray-400">Tidak ada user yang akan expired</td>
+                    </tr>
+                `;
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        };
+
+        // Extend user activation
+        const extendUser = async (userId) => {
+            const period = prompt('Masukkan jumlah hari perpanjangan:');
+            if (period) {
+                try {
+                    const response = await fetch(`/api/admin/users/${userId}/extend`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ period: parseInt(period) })
+                    });
+
+                    if (response.ok) {
+                        alert('Masa aktif user berhasil diperpanjang');
+                        loadDashboard();
+                    } else {
+                        const data = await response.json();
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+        };
+
+        // Initialize
+        const initialize = async () => {
+            // Fetch admin info
+            const response = await fetch('/api/auth/user/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            document.getElementById('adminInfo').textContent = data.data.user.username;
+
+            // Load dashboard data
+            loadDashboard();
+        };
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        });
+
+        // Initialize page
+        initialize();
+
+        // Refresh dashboard every 5 minutes
+        setInterval(loadDashboard, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
