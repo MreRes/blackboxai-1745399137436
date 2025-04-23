@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg">
+            <div class="p-4 border-b">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-wallet text-2xl text-blue-600"></i>
+                    <div>
+                        <h1 class="font-bold text-gray-800">Financial Assistant</h1>
+                        <p class="text-xs text-gray-500" id="userInfo">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="/dashboard.html" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/transactions.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="/budget.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-chart-pie w-5"></i>
+                    <span>Budget</span>
+                </a>
+                <a href="/reports.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>Laporan</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 border-t">
+                <button id="logoutBtn" class="w-full flex items-center justify-center space-x-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between p-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <span id="currentDate" class="text-sm text-gray-500"></span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Saldo -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Saldo</p>
+                                <h3 id="balanceAmount" class="text-2xl font-bold text-gray-800">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-wallet text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pemasukan -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Pemasukan Bulan Ini</p>
+                                <h3 id="incomeAmount" class="text-2xl font-bold text-green-600">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-up text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pengeluaran -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Pengeluaran Bulan Ini</p>
+                                <h3 id="expenseAmount" class="text-2xl font-bold text-red-600">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-red-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Grafik Transaksi -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Transaksi 7 Hari Terakhir</h3>
+                        <canvas id="transactionChart"></canvas>
+                    </div>
+
+                    <!-- Grafik Kategori -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Pengeluaran per Kategori</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Transaksi Terakhir</h3>
+                        <a href="/transactions.html" class="text-blue-600 hover:text-blue-700 text-sm">
+                            Lihat Semua
+                            <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-500">
+                                    <th class="pb-3">Tanggal</th>
+                                    <th class="pb-3">Kategori</th>
+                                    <th class="pb-3">Deskripsi</th>
+                                    <th class="pb-3 text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTransactions">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-gray-500">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        // Format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR'
+            }).format(amount);
+        };
+
+        // Format date
+        const formatDate = (date) => {
+            return new Intl.DateTimeFormat('id-ID', {
+                dateStyle: 'medium'
+            }).format(new Date(date));
+        };
+
+        // Set current date
+        document.getElementById('currentDate').textContent = new Intl.DateTimeFormat('id-ID', {
+            dateStyle: 'full'
+        }).format(new Date());
+
+        // Fetch user info
+        fetch('/api/auth/user/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('userInfo').textContent = data.data.user.username;
+        });
+
+        // Fetch dashboard data
+        Promise.all([
+            // Get monthly summary
+            fetch('/api/reports/monthly', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }),
+            // Get recent transactions
+            fetch('/api/transactions?limit=5', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }),
+            // Get category summary
+            fetch('/api/transactions/summary/category', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+        ])
+        .then(responses => Promise.all(responses.map(res => res.json())))
+        .then(([monthlyData, transactionsData, categoryData]) => {
+            // Update summary cards
+            document.getElementById('balanceAmount').textContent = formatCurrency(
+                monthlyData.data.summary.income - monthlyData.data.summary.expense
+            );
+            document.getElementById('incomeAmount').textContent = formatCurrency(
+                monthlyData.data.summary.income
+            );
+            document.getElementById('expenseAmount').textContent = formatCurrency(
+                monthlyData.data.summary.expense
+            );
+
+            // Update recent transactions
+            const transactionsHTML = transactionsData.data.transactions.map(t => `
+                <tr class="border-t">
+                    <td class="py-3 text-sm">${formatDate(t.timestamp)}</td>
+                    <td class="py-3 text-sm">
+                        <span class="px-2 py-1 rounded-full text-xs ${
+                            t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }">
+                            ${t.category}
+                        </span>
+                    </td>
+                    <td class="py-3 text-sm">${t.description}</td>
+                    <td class="py-3 text-sm text-right ${
+                        t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }">
+                        ${formatCurrency(t.amount)}
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('recentTransactions').innerHTML = transactionsHTML;
+
+            // Create transaction chart
+            const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+            new Chart(transactionCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.data.dailyTransactions.map(d => d.date),
+                    datasets: [
+                        {
+                            label: 'Pemasukan',
+                            data: monthlyData.data.dailyTransactions.map(d => d.income),
+                            borderColor: '#10B981',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Pengeluaran',
+                            data: monthlyData.data.dailyTransactions.map(d => d.expense),
+                            borderColor: '#EF4444',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Create category chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            const expenseCategories = categoryData.data.summary.find(s => s._id === 'expense');
+            new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: expenseCategories.categories.map(c => c.category),
+                    datasets: [{
+                        data: expenseCategories.categories.map(c => c.total),
+                        backgroundColor: [
+                            '#3B82F6',
+                            '#10B981',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#8B5CF6',
+                            '#EC4899',
+                            '#6366F1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching dashboard data:', error);
+        });
+
+        // Handle logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>
