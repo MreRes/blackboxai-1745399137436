@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Login</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        <!-- Login Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 space-y-6">
+            <!-- Logo dan Judul -->
+            <div class="text-center space-y-2">
+                <i class="fas fa-wallet text-4xl text-blue-600"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Financial Assistant</h1>
+                <p class="text-gray-500">Masuk ke akun Anda</p>
+            </div>
+
+            <!-- Form Login -->
+            <form id="loginForm" class="space-y-4">
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+                        Username
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                            placeholder="Masukkan username"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- Kode Aktivasi -->
+                <div>
+                    <label for="activationCode" class="block text-sm font-medium text-gray-700 mb-1">
+                        Kode Aktivasi
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-key text-gray-400"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            id="activationCode" 
+                            name="activationCode" 
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg uppercase focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                            placeholder="Masukkan kode aktivasi"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- Tombol Login -->
+                <button 
+                    type="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 transition-colors duration-200"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Masuk
+                </button>
+            </form>
+
+            <!-- Pesan Error -->
+            <div id="errorMessage" class="hidden bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span></span>
+            </div>
+
+            <!-- Link Admin -->
+            <div class="text-center text-sm">
+                <a href="/admin/login.html" class="text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                    <i class="fas fa-user-shield mr-1"></i>
+                    Login sebagai Admin
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-500 text-sm">
+            <p>&copy; 2023 Financial Assistant. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const activationCode = document.getElementById('activationCode').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            try {
+                const response = await fetch('/api/auth/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, activationCode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Simpan token
+                    localStorage.setItem('token', data.token);
+                    // Redirect ke dashboard
+                    window.location.href = '/dashboard.html';
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan saat login');
+                }
+            } catch (error) {
+                errorMessage.querySelector('span').textContent = error.message;
+                errorMessage.classList.remove('hidden');
+                
+                // Sembunyikan pesan error setelah 5 detik
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+        // Format kode aktivasi menjadi uppercase
+        document.getElementById('activationCode').addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>
