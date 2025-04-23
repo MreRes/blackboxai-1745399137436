@@ -1,22 +1,25 @@
 #!/bin/bash
 
-# Kill any process using port 8000
-echo "Checking if port 8000 is in use..."
-if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
-    echo "Port 8000 is in use. Killing process..."
-    kill $(lsof -t -i:8000)
+# Check if MongoDB is installed
+if ! command -v mongod &> /dev/null; then
+    echo "MongoDB is not installed. Installing MongoDB..."
+    # Install MongoDB
+    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+    sudo apt-get update
+    sudo apt-get install -y mongodb-org
 fi
 
-# Start the server
-echo "Starting server..."
-node server/index.js &
+# Create data directory if it doesn't exist
+sudo mkdir -p /data/db
 
-# Wait for server to start
-sleep 2
+# Start MongoDB daemon
+echo "Starting MongoDB..."
+sudo mongod --fork --logpath /var/log/mongodb.log
 
-# Start Python HTTP server for serving static files
-echo "Starting Python HTTP server..."
-python3 -m http.server 8000 -d server/public
+# Wait for MongoDB to start
+sleep 5
 
-# Keep the script running
-wait
+# Start the Node.js application
+echo "Starting Node.js application..."
+node server/index.js
