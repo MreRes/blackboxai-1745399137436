@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Manajemen User</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 shadow-lg">
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-user-shield text-2xl text-blue-500"></i>
+                    <div>
+                        <h1 class="font-bold text-white">Admin Panel</h1>
+                        <p class="text-xs text-gray-400" id="adminInfo">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="/admin/dashboard.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/users.html" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Users</span>
+                </a>
+                <a href="/admin/transactions.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="/admin/settings.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                <button id="logoutBtn" class="w-full flex items-center justify-center space-x-2 p-2 text-red-400 hover:bg-red-900/50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-gray-800 shadow-sm">
+                <div class="flex items-center justify-between p-4">
+                    <h2 class="text-xl font-semibold text-white">Manajemen User</h2>
+                    <button 
+                        onclick="openUserModal()"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200"
+                    >
+                        <i class="fas fa-plus mr-2"></i>
+                        Tambah User
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Filter Section -->
+                <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">
+                                Cari
+                            </label>
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                placeholder="Username atau nomor telepon"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">
+                                Status
+                            </label>
+                            <select 
+                                id="statusFilter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="">Semua Status</option>
+                                <option value="true">Aktif</option>
+                                <option value="false">Tidak Aktif</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1">
+                                Urutkan
+                            </label>
+                            <select 
+                                id="sortFilter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="-createdAt">Terbaru</option>
+                                <option value="createdAt">Terlama</option>
+                                <option value="username">Username (A-Z)</option>
+                                <option value="-username">Username (Z-A)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-400 border-b border-gray-700">
+                                    <th class="pb-3">Username</th>
+                                    <th class="pb-3">Nomor Telepon</th>
+                                    <th class="pb-3">Kode Aktivasi</th>
+                                    <th class="pb-3">Masa Aktif</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-gray-400">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between mt-4">
+                        <p class="text-sm text-gray-400">
+                            Menampilkan <span id="startIndex">0</span> - <span id="endIndex">0</span> dari <span id="totalItems">0</span> user
+                        </p>
+                        <div class="space-x-2">
+                            <button 
+                                id="prevPage" 
+                                class="px-3 py-1 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                                disabled
+                            >
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button 
+                                id="nextPage" 
+                                class="px-3 py-1 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                                disabled
+                            >
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-gray-800 rounded-xl shadow-lg w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white" id="modalTitle">Tambah User</h3>
+                    <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="userForm" class="space-y-4">
+                    <input type="hidden" id="userId">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">
+                            Username
+                        </label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">
+                            Batas Nomor
+                        </label>
+                        <input 
+                            type="number" 
+                            id="maxPhoneNumbers" 
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="1"
+                            value="1"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">
+                            Masa Aktif
+                        </label>
+                        <select 
+                            id="activationPeriod"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                            <option value="7">7 Hari</option>
+                            <option value="30">30 Hari</option>
+                            <option value="365">1 Tahun</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+
+                    <div id="customPeriodInput" class="hidden">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">
+                            Jumlah Hari
+                        </label>
+                        <input 
+                            type="number" 
+                            id="customDays" 
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="1"
+                        >
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button 
+                            type="button"
+                            onclick="closeUserModal()"
+                            class="px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                        >
+                            Batal
+                        </button>
+                        <button 
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200"
+                        >
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/admin/login.html';
+        }
+
+        // Global variables
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Format date
+        const formatDate = (date) => {
+            return new Intl.DateTimeFormat('id-ID', {
+                dateStyle: 'medium'
+            }).format(new Date(date));
+        };
+
+        // Calculate days until expiry
+        const getDaysUntilExpiry = (expiryDate) => {
+            const days = Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+            return days;
+        };
+
+        // Format days remaining
+        const formatDaysRemaining = (days) => {
+            if (days < 0) return 'Expired';
+            if (days === 0) return 'Hari ini';
+            return `${days} hari lagi`;
+        };
+
+        // Load users
+        const loadUsers = async () => {
+            const search = document.getElementById('searchInput').value;
+            const isActive = document.getElementById('statusFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            try {
+                const response = await fetch(`/api/admin/users?page=${currentPage}&search=${search}&isActive=${isActive}&sort=${sort}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                // Update pagination
+                totalPages = data.pagination.pages;
+                document.getElementById('startIndex').textContent = ((currentPage - 1) * data.pagination.limit) + 1;
+                document.getElementById('endIndex').textContent = Math.min(currentPage * data.pagination.limit, data.pagination.total);
+                document.getElementById('totalItems').textContent = data.pagination.total;
+                
+                document.getElementById('prevPage').disabled = currentPage === 1;
+                document.getElementById('nextPage').disabled = currentPage === totalPages;
+
+                // Update table
+                const usersHTML = data.data.users.map(user => {
+                    const daysRemaining = getDaysUntilExpiry(user.activationExpiry);
+                    return `
+                        <tr class="border-b border-gray-700">
+                            <td class="py-3 text-white">${user.username}</td>
+                            <td class="py-3 text-gray-300">
+                                ${user.phoneNumbers.map(phone => `
+                                    <div class="flex items-center space-x-2">
+                                        <span>${phone.number}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-xs ${
+                                            phone.isActive ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
+                                        }">
+                                            ${phone.isActive ? 'Aktif' : 'Nonaktif'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </td>
+                            <td class="py-3 text-gray-300">${user.activationCode}</td>
+                            <td class="py-3">
+                                <div>
+                                    <p class="text-gray-300">${formatDate(user.activationExpiry)}</p>
+                                    <p class="text-sm ${
+                                        daysRemaining <= 3 ? 'text-red-400' :
+                                        daysRemaining <= 7 ? 'text-yellow-400' :
+                                        'text-green-400'
+                                    }">
+                                        ${formatDaysRemaining(daysRemaining)}
+                                    </p>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded-full text-xs ${
+                                    daysRemaining > 0 ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
+                                }">
+                                    ${daysRemaining > 0 ? 'Aktif' : 'Tidak Aktif'}
+                                </span>
+                            </td>
+                            <td class="py-3 text-right space-x-2">
+                                <button 
+                                    onclick="editUser('${user._id}')"
+                                    class="text-blue-500 hover:text-blue-400"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button 
+                                    onclick="resetActivation('${user._id}')"
+                                    class="text-yellow-500 hover:text-yellow-400"
+                                >
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button 
+                                    onclick="extendUser('${user._id}')"
+                                    class="text-green-500 hover:text-green-400"
+                                >
+                                    <i class="fas fa-clock"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('usersTable').innerHTML = usersHTML || `
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-gray-400">Tidak ada user</td>
+                    </tr>
+                `;
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        };
+
+        // Modal functions
+        const userModal = document.getElementById('userModal');
+        const userForm = document.getElementById('userForm');
+
+        const openUserModal = (isEdit = false) => {
+            document.getElementById('modalTitle').textContent = isEdit ? 'Edit User' : 'Tambah User';
+            userModal.classList.remove('hidden');
+            userModal.classList.add('flex');
+        };
+
+        const closeUserModal = () => {
+            userModal.classList.add('hidden');
+            userModal.classList.remove('flex');
+            userForm.reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('customPeriodInput').classList.add('hidden');
+        };
+
+        // Handle activation period change
+        document.getElementById('activationPeriod').addEventListener('change', (e) => {
+            const customInput = document.getElementById('customPeriodInput');
+            if (e.target.value === 'custom') {
+                customInput.classList.remove('hidden');
+                document.getElementById('customDays').required = true;
+            } else {
+                customInput.classList.add('hidden');
+                document.getElementById('customDays').required = false;
+            }
+        });
+
+        // Handle user form
+        userForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userId = document.getElementById('userId').value;
+            const username = document.getElementById('username').value;
+            const maxPhoneNumbers = parseInt(document.getElementById('maxPhoneNumbers').value);
+            const activationPeriod = document.getElementById('activationPeriod').value;
+            const customDays = document.getElementById('customDays').value;
+
+            const period = activationPeriod === 'custom' ? parseInt(customDays) : parseInt(activationPeriod);
+
+            try {
+                const url = userId ? 
+                    `/api/admin/users/${userId}` : 
+                    '/api/admin/users';
+                
+                const response = await fetch(url, {
+                    method: userId ? 'PUT' : 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        maxPhoneNumbers,
+                        activationPeriod: period
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (!userId) {
+                        // Show activation code for new user
+                        alert(`User berhasil dibuat!\nKode Aktivasi: ${data.data.user.activationCode}`);
+                    }
+                    closeUserModal();
+                    loadUsers();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Edit user
+        const editUser = async (id) => {
+            try {
+                const response = await fetch(`/api/admin/users/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                const user = data.data.user;
+
+                document.getElementById('userId').value = id;
+                document.getElementById('username').value = user.username;
+                document.getElementById('maxPhoneNumbers').value = user.maxPhoneNumbers;
+                
+                openUserModal(true);
+            } catch (error) {
+                console.error('Error loading user:', error);
+                alert('Gagal memuat data user');
+            }
+        };
+
+        // Reset activation code
+        const resetActivation = async (id) => {
+            if (confirm('Reset kode aktivasi user ini?')) {
+                try {
+                    const response = await fetch(`/api/admin/users/${id}/reset-activation`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const data = await response.json();
+                    alert(`Kode aktivasi baru: ${data.data.user.activationCode}`);
+                    loadUsers();
+                } catch (error) {
+                    alert('Gagal mereset kode aktivasi');
+                }
+            }
+        };
+
+        // Extend user activation
+        const extendUser = async (id) => {
+            const period = prompt('Masukkan jumlah hari perpanjangan:');
+            if (period) {
+                try {
+                    const response = await fetch(`/api/admin/users/${id}/extend`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ period: parseInt(period) })
+                    });
+
+                    if (response.ok) {
+                        alert('Masa aktif user berhasil diperpanjang');
+                        loadUsers();
+                    } else {
+                        const data = await response.json();
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+        };
+
+        // Filter handlers
+        document.getElementById('searchInput').addEventListener('input', debounce(() => {
+            currentPage = 1;
+            loadUsers();
+        }, 500));
+
+        document.getElementById('statusFilter').addEventListener('change', () => {
+            currentPage = 1;
+            loadUsers();
+        });
+
+        document.getElementById('sortFilter').addEventListener('change', () => {
+            currentPage = 1;
+            loadUsers();
+        });
+
+        // Pagination handlers
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadUsers();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadUsers();
+            }
+        });
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Initialize
+        const initialize = async () => {
+            // Fetch admin info
+            const response = await fetch('/api/auth/user/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            document.getElementById('adminInfo').textContent = data.data.user.username;
+
+            // Load users
+            loadUsers();
+        };
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        });
+
+        // Initialize page
+        initialize();
+    </script>
+</body>
+</html>
