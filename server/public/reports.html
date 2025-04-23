@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Laporan</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        .tab.active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg">
+            <div class="p-4 border-b">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-wallet text-2xl text-blue-600"></i>
+                    <div>
+                        <h1 class="font-bold text-gray-800">Financial Assistant</h1>
+                        <p class="text-xs text-gray-500" id="userInfo">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="/dashboard.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/transactions.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="/budget.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-chart-pie w-5"></i>
+                    <span>Budget</span>
+                </a>
+                <a href="/reports.html" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>Laporan</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 border-t">
+                <button id="logoutBtn" class="w-full flex items-center justify-center space-x-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="p-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Laporan Keuangan</h2>
+                </div>
+                <!-- Tabs -->
+                <div class="flex border-b px-4">
+                    <button 
+                        onclick="switchTab('daily')"
+                        class="tab px-4 py-2 text-sm font-medium hover:text-blue-600 active"
+                        id="dailyTab"
+                    >
+                        Harian
+                    </button>
+                    <button 
+                        onclick="switchTab('monthly')"
+                        class="tab px-4 py-2 text-sm font-medium hover:text-blue-600"
+                        id="monthlyTab"
+                    >
+                        Bulanan
+                    </button>
+                    <button 
+                        onclick="switchTab('yearly')"
+                        class="tab px-4 py-2 text-sm font-medium hover:text-blue-600"
+                        id="yearlyTab"
+                    >
+                        Tahunan
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Date Filter -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="flex items-center space-x-4" id="dateFilter">
+                        <!-- Will be dynamically populated based on active tab -->
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Income -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Total Pemasukan</p>
+                                <h3 id="totalIncome" class="text-2xl font-bold text-green-600">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-up text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Total Pengeluaran</p>
+                                <h3 id="totalExpense" class="text-2xl font-bold text-red-600">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-red-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Saldo</p>
+                                <h3 id="balance" class="text-2xl font-bold text-blue-600">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-wallet text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Transaction Chart -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Grafik Transaksi</h3>
+                        <canvas id="transactionChart"></canvas>
+                    </div>
+
+                    <!-- Category Chart -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Distribusi Kategori</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Transaction List -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Rincian Transaksi</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-500 border-b">
+                                    <th class="pb-3">Tanggal</th>
+                                    <th class="pb-3">Tipe</th>
+                                    <th class="pb-3">Kategori</th>
+                                    <th class="pb-3">Deskripsi</th>
+                                    <th class="pb-3">Sumber</th>
+                                    <th class="pb-3 text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionList">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-gray-500">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        // Format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR'
+            }).format(amount);
+        };
+
+        // Format date
+        const formatDate = (date) => {
+            return new Intl.DateTimeFormat('id-ID', {
+                dateStyle: 'medium'
+            }).format(new Date(date));
+        };
+
+        // Global variables
+        let transactionChartInstance = null;
+        let categoryChartInstance = null;
+        let currentTab = 'daily';
+
+        // Switch tab
+        const switchTab = (tab) => {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`${tab}Tab`).classList.add('active');
+            
+            currentTab = tab;
+
+            // Update date filter
+            updateDateFilter();
+
+            // Load data
+            loadReport();
+        };
+
+        // Update date filter based on active tab
+        const updateDateFilter = () => {
+            const filterContainer = document.getElementById('dateFilter');
+            const now = new Date();
+
+            let filterHTML = '';
+            switch (currentTab) {
+                case 'daily':
+                    filterHTML = `
+                        <input 
+                            type="date" 
+                            id="selectedDate"
+                            value="${now.toISOString().split('T')[0]}"
+                            class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="loadReport()"
+                        >
+                    `;
+                    break;
+                case 'monthly':
+                    filterHTML = `
+                        <select 
+                            id="selectedMonth" 
+                            class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="loadReport()"
+                        >
+                            ${Array.from({length: 12}, (_, i) => {
+                                const month = new Date(2000, i, 1).toLocaleString('id-ID', { month: 'long' });
+                                return `<option value="${i + 1}" ${i + 1 === now.getMonth() + 1 ? 'selected' : ''}>${month}</option>`;
+                            }).join('')}
+                        </select>
+                        <select 
+                            id="selectedYear" 
+                            class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="loadReport()"
+                        >
+                            ${Array.from({length: 5}, (_, i) => {
+                                const year = now.getFullYear() - i;
+                                return `<option value="${year}" ${i === 0 ? 'selected' : ''}>${year}</option>`;
+                            }).join('')}
+                        </select>
+                    `;
+                    break;
+                case 'yearly':
+                    filterHTML = `
+                        <select 
+                            id="selectedYearOnly" 
+                            class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="loadReport()"
+                        >
+                            ${Array.from({length: 5}, (_, i) => {
+                                const year = now.getFullYear() - i;
+                                return `<option value="${year}" ${i === 0 ? 'selected' : ''}>${year}</option>`;
+                            }).join('')}
+                        </select>
+                    `;
+                    break;
+            }
+            filterContainer.innerHTML = filterHTML;
+        };
+
+        // Load report data
+        const loadReport = async () => {
+            try {
+                let endpoint = '';
+                let params = new URLSearchParams();
+
+                switch (currentTab) {
+                    case 'daily':
+                        endpoint = '/api/reports/daily';
+                        params.append('date', document.getElementById('selectedDate').value);
+                        break;
+                    case 'monthly':
+                        endpoint = '/api/reports/monthly';
+                        params.append('month', document.getElementById('selectedMonth').value);
+                        params.append('year', document.getElementById('selectedYear').value);
+                        break;
+                    case 'yearly':
+                        endpoint = '/api/reports/yearly';
+                        params.append('year', document.getElementById('selectedYearOnly').value);
+                        break;
+                }
+
+                const response = await fetch(`${endpoint}?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                const report = data.data;
+
+                // Update summary
+                document.getElementById('totalIncome').textContent = formatCurrency(report.summary.income);
+                document.getElementById('totalExpense').textContent = formatCurrency(report.summary.expense);
+                document.getElementById('balance').textContent = formatCurrency(report.summary.balance);
+
+                // Update transaction chart
+                if (transactionChartInstance) {
+                    transactionChartInstance.destroy();
+                }
+
+                const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+                let chartData;
+
+                switch (currentTab) {
+                    case 'daily':
+                        chartData = {
+                            labels: report.transactions.map(t => new Date(t.timestamp).toLocaleTimeString('id-ID')),
+                            datasets: [{
+                                label: 'Transaksi',
+                                data: report.transactions.map(t => t.type === 'income' ? t.amount : -t.amount),
+                                backgroundColor: (context) => {
+                                    const value = context.dataset.data[context.dataIndex];
+                                    return value >= 0 ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+                                }
+                            }]
+                        };
+                        break;
+                    case 'monthly':
+                    case 'yearly':
+                        chartData = {
+                            labels: report.monthlyTransactions.map(m => m.month),
+                            datasets: [
+                                {
+                                    label: 'Pemasukan',
+                                    data: report.monthlyTransactions.map(m => m.income),
+                                    borderColor: 'rgb(16, 185, 129)',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.5)'
+                                },
+                                {
+                                    label: 'Pengeluaran',
+                                    data: report.monthlyTransactions.map(m => m.expense),
+                                    borderColor: 'rgb(239, 68, 68)',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.5)'
+                                }
+                            ]
+                        };
+                        break;
+                }
+
+                transactionChartInstance = new Chart(transactionCtx, {
+                    type: currentTab === 'daily' ? 'bar' : 'line',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatCurrency(context.raw);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Update category chart
+                if (categoryChartInstance) {
+                    categoryChartInstance.destroy();
+                }
+
+                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+                const expenseCategories = report.categorySummary.find(s => s._id === 'expense');
+
+                categoryChartInstance = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: expenseCategories.categories.map(c => c.category),
+                        datasets: [{
+                            data: expenseCategories.categories.map(c => c.total),
+                            backgroundColor: [
+                                '#3B82F6',
+                                '#10B981',
+                                '#F59E0B',
+                                '#EF4444',
+                                '#8B5CF6',
+                                '#EC4899',
+                                '#6366F1'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Update transaction list
+                const transactions = currentTab === 'daily' ? report.transactions :
+                    report.monthlyTransactions.flatMap(m => m.transactions || []);
+
+                const transactionListHTML = transactions.map(t => `
+                    <tr class="border-t">
+                        <td class="py-3 text-sm">${formatDate(t.timestamp)}</td>
+                        <td class="py-3 text-sm">
+                            <span class="px-2 py-1 rounded-full text-xs ${
+                                t.type === 'income' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }">
+                                ${t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                            </span>
+                        </td>
+                        <td class="py-3 text-sm">${t.category}</td>
+                        <td class="py-3 text-sm">${t.description}</td>
+                        <td class="py-3 text-sm">${t.source}</td>
+                        <td class="py-3 text-sm text-right ${
+                            t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        }">
+                            ${formatCurrency(t.amount)}
+                        </td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('transactionList').innerHTML = transactionListHTML || `
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-gray-500">Tidak ada transaksi</td>
+                    </tr>
+                `;
+
+            } catch (error) {
+                console.error('Error loading report:', error);
+            }
+        };
+
+        // Initialize
+        const initialize = async () => {
+            // Fetch user info
+            const userResponse = await fetch('/api/auth/user/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const userData = await userResponse.json();
+            document.getElementById('userInfo').textContent = userData.data.user.username;
+
+            // Initialize date filter
+            updateDateFilter();
+
+            // Load initial report
+            loadReport();
+        };
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        // Initialize page
+        initialize();
+    </script>
+</body>
+</html>
