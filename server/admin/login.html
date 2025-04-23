@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Admin Login</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        <!-- Login Card -->
+        <div class="bg-gray-800 rounded-xl shadow-2xl p-8 space-y-6">
+            <!-- Logo dan Judul -->
+            <div class="text-center space-y-2">
+                <i class="fas fa-user-shield text-4xl text-blue-500"></i>
+                <h1 class="text-2xl font-bold text-white">Admin Panel</h1>
+                <p class="text-gray-400">Financial Assistant</p>
+            </div>
+
+            <!-- Form Login -->
+            <form id="loginForm" class="space-y-4">
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-300 mb-1">
+                        Username
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-user text-gray-500"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="block w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Masukkan username admin"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-1">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-lock text-gray-500"></i>
+                        </span>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="block w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Masukkan password"
+                            required
+                        >
+                        <button 
+                            type="button"
+                            id="togglePassword"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tombol Login -->
+                <button 
+                    type="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-200"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Login sebagai Admin
+                </button>
+            </form>
+
+            <!-- Pesan Error -->
+            <div id="errorMessage" class="hidden bg-red-900 text-red-200 p-3 rounded-lg text-sm">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span></span>
+            </div>
+
+            <!-- Link Kembali -->
+            <div class="text-center text-sm">
+                <a href="/" class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Kembali ke Login User
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-500 text-sm">
+            <p>&copy; 2023 Financial Assistant. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Password Visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Handle Login Form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            try {
+                const response = await fetch('/api/auth/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Simpan token
+                    localStorage.setItem('adminToken', data.token);
+                    // Redirect ke dashboard admin
+                    window.location.href = '/admin/dashboard.html';
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan saat login');
+                }
+            } catch (error) {
+                errorMessage.querySelector('span').textContent = error.message;
+                errorMessage.classList.remove('hidden');
+                
+                // Sembunyikan pesan error setelah 5 detik
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+        // Prevent form resubmission on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
+</body>
+</html>
