@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Budget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+        .progress-bar { transition: width 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-lg">
+            <div class="p-4 border-b">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-wallet text-2xl text-blue-600"></i>
+                    <div>
+                        <h1 class="font-bold text-gray-800">Financial Assistant</h1>
+                        <p class="text-xs text-gray-500" id="userInfo">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="/dashboard.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/transactions.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="/budget.html" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-chart-pie w-5"></i>
+                    <span>Budget</span>
+                </a>
+                <a href="/reports.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>Laporan</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 border-t">
+                <button id="logoutBtn" class="w-full flex items-center justify-center space-x-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between p-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Budget</h2>
+                    <button 
+                        onclick="openBudgetModal()"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                    >
+                        <i class="fas fa-plus mr-2"></i>
+                        Atur Budget
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Summary Card -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <h3 class="text-sm text-gray-500 mb-1">Total Budget</h3>
+                            <p id="totalBudget" class="text-2xl font-bold text-gray-800">Loading...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-sm text-gray-500 mb-1">Total Terpakai</h3>
+                            <p id="totalSpent" class="text-2xl font-bold text-red-600">Loading...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-sm text-gray-500 mb-1">Sisa Budget</h3>
+                            <p id="remainingBudget" class="text-2xl font-bold text-green-600">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Progress</span>
+                            <span id="usagePercentage">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="progressBar" class="progress-bar bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Categories -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget per Kategori</h3>
+                    <div id="categoryList" class="space-y-4">
+                        <div class="text-center text-gray-500 py-4">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Budget Chart -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Visualisasi Budget</h3>
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budgetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-lg mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Atur Budget</h3>
+                    <button onclick="closeBudgetModal()" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="budgetForm" class="space-y-4">
+                    <div id="categoryInputs" class="space-y-4">
+                        <!-- Category inputs will be dynamically added here -->
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button 
+                            type="button"
+                            onclick="closeBudgetModal()"
+                            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                        >
+                            Batal
+                        </button>
+                        <button 
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                        >
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        // Format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR'
+            }).format(amount);
+        };
+
+        // Parse currency input
+        const parseCurrency = (value) => {
+            return parseInt(value.replace(/[^\d]/g, ''));
+        };
+
+        // Format currency input
+        const formatCurrencyInput = (element) => {
+            let value = parseCurrency(element.value);
+            if (!isNaN(value)) {
+                element.value = formatCurrency(value).replace('Rp', '').trim();
+            }
+        };
+
+        // Load budget data
+        const loadBudget = async () => {
+            try {
+                const response = await fetch('/api/budget/current', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                const budget = data.data.budget;
+
+                // Update summary
+                document.getElementById('totalBudget').textContent = budget.totalBudget;
+                document.getElementById('totalSpent').textContent = budget.totalSpent;
+                document.getElementById('remainingBudget').textContent = budget.remaining;
+                
+                const percentage = budget.usagePercentage;
+                document.getElementById('usagePercentage').textContent = `${percentage.toFixed(1)}%`;
+                document.getElementById('progressBar').style.width = `${percentage}%`;
+                
+                if (percentage >= 90) {
+                    document.getElementById('progressBar').classList.add('bg-red-600');
+                } else if (percentage >= 75) {
+                    document.getElementById('progressBar').classList.add('bg-yellow-600');
+                }
+
+                // Update category list
+                const categoryListHTML = budget.categories.map(cat => `
+                    <div class="border rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <div>
+                                <h4 class="font-medium text-gray-800">${cat.name}</h4>
+                                <p class="text-sm text-gray-500">
+                                    ${cat.spent} dari ${cat.budget}
+                                </p>
+                            </div>
+                            <span class="text-sm ${
+                                cat.isOverBudget ? 'text-red-600' : 'text-green-600'
+                            }">
+                                ${cat.percentage.toFixed(1)}%
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                                class="progress-bar h-2 rounded-full ${
+                                    cat.isOverBudget ? 'bg-red-600' : 
+                                    cat.percentage >= 75 ? 'bg-yellow-600' : 'bg-green-600'
+                                }"
+                                style="width: ${Math.min(cat.percentage, 100)}%"
+                            ></div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('categoryList').innerHTML = categoryListHTML;
+
+                // Update chart
+                const ctx = document.getElementById('budgetChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: budget.categories.map(c => c.name),
+                        datasets: [
+                            {
+                                label: 'Budget',
+                                data: budget.categories.map(c => parseCurrency(c.budget)),
+                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                borderColor: 'rgb(59, 130, 246)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Terpakai',
+                                data: budget.categories.map(c => parseCurrency(c.spent)),
+                                backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                borderColor: 'rgb(239, 68, 68)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading budget:', error);
+            }
+        };
+
+        // Modal functions
+        const budgetModal = document.getElementById('budgetModal');
+        const budgetForm = document.getElementById('budgetForm');
+
+        const openBudgetModal = async () => {
+            try {
+                // Fetch categories
+                const response = await fetch('/api/settings/categories', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                // Create inputs for each expense category
+                const categoryInputsHTML = data.data.categories.expense.map(category => `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            ${category}
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                                Rp
+                            </span>
+                            <input 
+                                type="text" 
+                                name="category_${category}"
+                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="0"
+                                required
+                            >
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('categoryInputs').innerHTML = categoryInputsHTML;
+
+                // Add input formatters
+                document.querySelectorAll('input[name^="category_"]').forEach(input => {
+                    input.addEventListener('input', (e) => formatCurrencyInput(e.target));
+                });
+
+                // Try to load current budget
+                try {
+                    const budgetResponse = await fetch('/api/budget/current', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const budgetData = await budgetResponse.json();
+                    
+                    // Fill current values
+                    budgetData.data.budget.categories.forEach(cat => {
+                        const input = document.querySelector(`input[name="category_${cat.name}"]`);
+                        if (input) {
+                            input.value = formatCurrency(parseCurrency(cat.budget)).replace('Rp', '').trim();
+                        }
+                    });
+                } catch (error) {
+                    console.log('No existing budget found');
+                }
+
+                budgetModal.classList.remove('hidden');
+                budgetModal.classList.add('flex');
+            } catch (error) {
+                console.error('Error preparing budget modal:', error);
+                alert('Gagal memuat form budget');
+            }
+        };
+
+        const closeBudgetModal = () => {
+            budgetModal.classList.add('hidden');
+            budgetModal.classList.remove('flex');
+            budgetForm.reset();
+        };
+
+        // Handle budget form
+        budgetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const categories = [];
+            let totalBudget = 0;
+
+            document.querySelectorAll('input[name^="category_"]').forEach(input => {
+                const amount = parseCurrency(input.value);
+                if (amount > 0) {
+                    categories.push({
+                        name: input.name.replace('category_', ''),
+                        amount: amount
+                    });
+                    totalBudget += amount;
+                }
+            });
+
+            const budget = {
+                month: new Date().getMonth() + 1,
+                year: new Date().getFullYear(),
+                categories,
+                totalBudget
+            };
+
+            try {
+                const response = await fetch('/api/budget', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(budget)
+                });
+
+                if (response.ok) {
+                    closeBudgetModal();
+                    loadBudget();
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Initialize
+        const initialize = async () => {
+            // Fetch user info
+            const userResponse = await fetch('/api/auth/user/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const userData = await userResponse.json();
+            document.getElementById('userInfo').textContent = userData.data.user.username;
+
+            // Load budget data
+            loadBudget();
+        };
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        // Initialize page
+        initialize();
+    </script>
+</body>
+</html>
