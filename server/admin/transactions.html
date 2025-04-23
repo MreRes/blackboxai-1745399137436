@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Assistant - Transaksi Admin</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 shadow-lg">
+            <div class="p-4 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-user-shield text-2xl text-blue-500"></i>
+                    <div>
+                        <h1 class="font-bold text-white">Admin Panel</h1>
+                        <p class="text-xs text-gray-400" id="adminInfo">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="/admin/dashboard.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/users.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-users w-5"></i>
+                    <span>Users</span>
+                </a>
+                <a href="/admin/transactions.html" class="sidebar-link active flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-exchange-alt w-5"></i>
+                    <span>Transaksi</span>
+                </a>
+                <a href="/admin/settings.html" class="sidebar-link flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-700">
+                <button id="logoutBtn" class="w-full flex items-center justify-center space-x-2 p-2 text-red-400 hover:bg-red-900/50 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-gray-800 shadow-sm">
+                <div class="p-4">
+                    <h2 class="text-xl font-semibold text-white">Transaksi User</h2>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+                <!-- Filter Section -->
+                <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                                User
+                            </label>
+                            <select 
+                                id="userFilter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="">Semua User</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                                Tipe
+                            </label>
+                            <select 
+                                id="typeFilter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="">Semua Tipe</option>
+                                <option value="income">Pemasukan</option>
+                                <option value="expense">Pengeluaran</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                                Kategori
+                            </label>
+                            <select 
+                                id="categoryFilter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="">Semua Kategori</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                                Periode
+                            </label>
+                            <select 
+                                id="periodFilter"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                                <option value="all">Semua Waktu</option>
+                                <option value="today">Hari Ini</option>
+                                <option value="week">Minggu Ini</option>
+                                <option value="month">Bulan Ini</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Custom Date Range -->
+                    <div id="dateRangeFilter" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                                Tanggal Mulai
+                            </label>
+                            <input 
+                                type="date" 
+                                id="startDate"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">
+                                Tanggal Akhir
+                            </label>
+                            <input 
+                                type="date" 
+                                id="endDate"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Total Transactions -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Total Transaksi</p>
+                                <h3 id="totalTransactions" class="text-2xl font-bold text-white">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-blue-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exchange-alt text-blue-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Income -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Total Pemasukan</p>
+                                <h3 id="totalIncome" class="text-2xl font-bold text-green-500">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-green-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-up text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Expense -->
+                    <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-400">Total Pengeluaran</p>
+                                <h3 id="totalExpense" class="text-2xl font-bold text-red-500">Loading...</h3>
+                            </div>
+                            <div class="w-10 h-10 bg-red-900/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-red-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left text-sm text-gray-400 border-b border-gray-700">
+                                    <th class="pb-3">User</th>
+                                    <th class="pb-3">Tanggal</th>
+                                    <th class="pb-3">Tipe</th>
+                                    <th class="pb-3">Kategori</th>
+                                    <th class="pb-3">Deskripsi</th>
+                                    <th class="pb-3">Sumber</th>
+                                    <th class="pb-3 text-right">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-gray-400">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between mt-4">
+                        <p class="text-sm text-gray-400">
+                            Menampilkan <span id="startIndex">0</span> - <span id="endIndex">0</span> dari <span id="totalItems">0</span> transaksi
+                        </p>
+                        <div class="space-x-2">
+                            <button 
+                                id="prevPage" 
+                                class="px-3 py-1 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                                disabled
+                            >
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button 
+                                id="nextPage" 
+                                class="px-3 py-1 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                                disabled
+                            >
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/admin/login.html';
+        }
+
+        // Global variables
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR'
+            }).format(amount);
+        };
+
+        // Format date
+        const formatDate = (date) => {
+            return new Intl.DateTimeFormat('id-ID', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            }).format(new Date(date));
+        };
+
+        // Load users for filter
+        const loadUsers = async () => {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const userSelect = document.getElementById('userFilter');
+                const users = data.data.users;
+                
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user._id;
+                    option.textContent = user.username;
+                    userSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        };
+
+        // Load categories for filter
+        const loadCategories = async () => {
+            try {
+                const response = await fetch('/api/settings/categories', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const categorySelect = document.getElementById('categoryFilter');
+                const categories = [...data.data.categories.income, ...data.data.categories.expense];
+                
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        };
+
+        // Load transactions
+        const loadTransactions = async () => {
+            const userId = document.getElementById('userFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            const period = document.getElementById('periodFilter').value;
+            
+            let startDate = document.getElementById('startDate').value;
+            let endDate = document.getElementById('endDate').value;
+
+            // Set date range based on period
+            if (period !== 'custom') {
+                const now = new Date();
+                endDate = now.toISOString().split('T')[0];
+                
+                switch (period) {
+                    case 'today':
+                        startDate = endDate;
+                        break;
+                    case 'week':
+                        const weekStart = new Date(now.setDate(now.getDate() - 7));
+                        startDate = weekStart.toISOString().split('T')[0];
+                        break;
+                    case 'month':
+                        const monthStart = new Date(now.setDate(1));
+                        startDate = monthStart.toISOString().split('T')[0];
+                        break;
+                    default:
+                        startDate = '';
+                        endDate = '';
+                }
+            }
+
+            try {
+                const response = await fetch(`/api/admin/users/${userId || 'all'}/transactions?page=${currentPage}&type=${type}&category=${category}&startDate=${startDate}&endDate=${endDate}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                // Update pagination
+                totalPages = data.pagination.pages;
+                document.getElementById('startIndex').textContent = ((currentPage - 1) * data.pagination.limit) + 1;
+                document.getElementById('endIndex').textContent = Math.min(currentPage * data.pagination.limit, data.pagination.total);
+                document.getElementById('totalItems').textContent = data.pagination.total;
+                
+                document.getElementById('prevPage').disabled = currentPage === 1;
+                document.getElementById('nextPage').disabled = currentPage === totalPages;
+
+                // Update summary
+                let totalIncome = 0;
+                let totalExpense = 0;
+                data.data.transactions.forEach(t => {
+                    if (t.type === 'income') totalIncome += t.amount;
+                    else totalExpense += t.amount;
+                });
+
+                document.getElementById('totalTransactions').textContent = data.pagination.total;
+                document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+                document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
+
+                // Update table
+                const transactionsHTML = data.data.transactions.map(t => `
+                    <tr class="border-b border-gray-700">
+                        <td class="py-3 text-white">${t.username}</td>
+                        <td class="py-3 text-gray-300">${formatDate(t.timestamp)}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded-full text-xs ${
+                                t.type === 'income' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
+                            }">
+                                ${t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                            </span>
+                        </td>
+                        <td class="py-3 text-gray-300">${t.category}</td>
+                        <td class="py-3 text-gray-300">${t.description}</td>
+                        <td class="py-3 text-gray-300">${t.source}</td>
+                        <td class="py-3 text-right ${
+                            t.type === 'income' ? 'text-green-400' : 'text-red-400'
+                        }">
+                            ${formatCurrency(t.amount)}
+                        </td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('transactionsTable').innerHTML = transactionsHTML || `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-gray-400">Tidak ada transaksi</td>
+                    </tr>
+                `;
+
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        };
+
+        // Handle period filter change
+        document.getElementById('periodFilter').addEventListener('change', (e) => {
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            if (e.target.value === 'custom') {
+                dateRangeFilter.classList.remove('hidden');
+            } else {
+                dateRangeFilter.classList.add('hidden');
+            }
+            currentPage = 1;
+            loadTransactions();
+        });
+
+        // Filter handlers
+        ['userFilter', 'typeFilter', 'categoryFilter'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                currentPage = 1;
+                loadTransactions();
+            });
+        });
+
+        // Date filter handlers
+        ['startDate', 'endDate'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                if (document.getElementById('periodFilter').value === 'custom') {
+                    currentPage = 1;
+                    loadTransactions();
+                }
+            });
+        });
+
+        // Pagination handlers
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTransactions();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadTransactions();
+            }
+        });
+
+        // Initialize
+        const initialize = async () => {
+            // Fetch admin info
+            const response = await fetch('/api/auth/user/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            document.getElementById('adminInfo').textContent = data.data.user.username;
+
+            // Load filters and initial data
+            await Promise.all([
+                loadUsers(),
+                loadCategories()
+            ]);
+            loadTransactions();
+        };
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/login.html';
+        });
+
+        // Initialize page
+        initialize();
+    </script>
+</body>
+</html>
